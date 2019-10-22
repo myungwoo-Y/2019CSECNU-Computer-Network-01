@@ -146,7 +146,6 @@ public class NILayer implements BaseLayer {
                         UpperLayer.Receive(data);
                     }
                 };
-
                 AdapterObject.loop(100000, jpacketHandler, "");
             }
         }

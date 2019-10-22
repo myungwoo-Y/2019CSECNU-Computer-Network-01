@@ -51,6 +51,10 @@ public class EthernetLayer implements BaseLayer {
         public void setSrcAddr(byte[] srcAddr) {
             System.arraycopy(srcAddr, 0, this.srcAddr.addr , 0, 6);
         }
+
+        public void setDstAddr(byte[] dstAddr) {
+            System.arraycopy(dstAddr, 0, this.dstAddr.addr , 0, 6);
+        }
     }
 
     public int nUpperLayerCount = 0;
@@ -71,13 +75,17 @@ public class EthernetLayer implements BaseLayer {
         this.m_Ethernet_Header.setSrcAddr(addr);
     }
 
+    public void setDstAddr(byte[] addr){
+        this.m_Ethernet_Header.setDstAddr(addr);
+    }
+
     public synchronized boolean Receive(byte[] input) {
 
-        int frameType = byte2ToInt(input[12]    , input[13]);
+        int frameType = byte2ToInt(input[12], input[13]);
 
-        if ((isRightPacket(input) == false) || isRightAddress(input) == false) {
-            return false;
-        }
+//        if ((isRightPacket(input) == false) || isRightAddress(input) == false) {
+//            return false;
+//        }
 
         if (frameType == 0x0806){
             input = removeAddressHeader(input, input.length);
@@ -117,8 +125,13 @@ public class EthernetLayer implements BaseLayer {
         }
         else {
             // 그 이외의 경우 프로토콜 타입을 IP로 바꿔 IP 레이어로 바로 올라가게 한다
+            byte destIP[] = new byte[]{ input[16], input[17], input[18], input[19]};
+            ARPLayer.ARPCache getCache = ARPLayer.ARPCacheTable.getCache(destIP);
+            if(getCache == null){
+                return false;
+            }
             temp = addressing(input, input.length,
-                    new byte[]{ input[ 8], input[ 9], input[10], input[11], input[12], input[13] },
+                    getCache.getMacAddress(),
                     new byte[]{ input[18], input[19], input[20], input[21], input[22], input[23] },
                     new byte[]{ 0x08, 0x00 });
         }

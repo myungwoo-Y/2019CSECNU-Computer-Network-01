@@ -57,61 +57,6 @@ public class AppLayer extends JFrame implements BaseLayer {
 
 	private static LayerManager m_LayerMgr = new LayerManager();
 
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					AppLayer appLayer = new AppLayer("GUI");
-					appLayer.setVisible(true);
-					m_LayerMgr.AddLayer(appLayer);
-
-					tcpLayer = new TCPLayer("Tcp");
-					m_LayerMgr.AddLayer(tcpLayer);
-
-					ipLayer = new IPLayer("Ip");
-					m_LayerMgr.AddLayer(ipLayer);
-
-					arpLayer = new ARPLayer("Arp");
-					m_LayerMgr.AddLayer(arpLayer);
-
-					ethernetLayer = new EthernetLayer("Ethernet");
-					m_LayerMgr.AddLayer(ethernetLayer);
-
-					niLayer = new NILayer("NI");
-					m_LayerMgr.AddLayer(niLayer);
-
-					m_LayerMgr.ConnectLayers(" NI ( *Ethernet ( +Ip ( *Tcp ( *GUI ) ) ) ) ");
-					m_LayerMgr.GetLayer("Ip").SetUnderLayer(m_LayerMgr.GetLayer("Arp"));
-               				m_LayerMgr.GetLayer("Ethernet").SetUpperUnderLayer(m_LayerMgr.GetLayer("Arp"));
-					
-					arpLayer.setAppLayer();
-					ipLayer.setSrcIP(InetAddress.getLocalHost().getAddress());
-					arpLayer.setSrcIp(InetAddress.getLocalHost().getAddress());
-
-					InetAddress presentAddr = InetAddress.getLocalHost();
-					NetworkInterface net = NetworkInterface.getByInetAddress(presentAddr);
-
-					byte[] macAddressBytes = net.getHardwareAddress();
-					arpLayer.setSrcMac(niLayer.getMacAddress());
-					ethernetLayer.setSrcAddr(niLayer.getMacAddress());
-
-
-					ethernetLayer.SetUpperLayer(ipLayer);
-
-					// 어떤 어댑터를 사용할지 결정한다.
-					// 디버깅을 통해 adapter list 를 이용하여 설정한다.
-					niLayer.SetAdapterNumber(0);
-
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-
 
 	// create send using thread
 	public class Send extends Thread{
@@ -122,7 +67,7 @@ public class AppLayer extends JFrame implements BaseLayer {
 		}
 
 		public void run(){
-			p_UnderLayer.Send(input, input.length);
+			tcpLayer.Send(input, 0);
 		}
 	}
 
@@ -210,13 +155,34 @@ public class AppLayer extends JFrame implements BaseLayer {
 		return ret;
 	}
 
+
+	public static void setTcpLayer(TCPLayer tcpLayer) {
+		AppLayer.tcpLayer = tcpLayer;
+	}
+
+	public static void setIpLayer(IPLayer ipLayer) {
+		AppLayer.ipLayer = ipLayer;
+	}
+
+	public static void setArpLayer(ARPLayer arpLayer) {
+		AppLayer.arpLayer = arpLayer;
+	}
+
+	public static void setEthernetLayer(EthernetLayer ethernetLayer) {
+		AppLayer.ethernetLayer = ethernetLayer;
+	}
+
+	public static void setNiLayer(NILayer niLayer) {
+		AppLayer.niLayer = niLayer;
+	}
+
 	/**
 	 * Create the frame.
 	 */
 	public AppLayer(String pName) {
 		this.pLayerName = pName;
 		setTitle("TestARP");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		setBounds(500, 400, 1000, 400);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -449,7 +415,7 @@ public class AppLayer extends JFrame implements BaseLayer {
 		JButton btnProgramEnd = new JButton("종료");
 		btnProgramEnd.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				System.exit(0);
+				setVisible(false);
 			}
 		});
 		btnProgramEnd.setBounds(395, 324, 90, 27);

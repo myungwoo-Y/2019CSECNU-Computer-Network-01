@@ -93,8 +93,8 @@ public class ARPLayer implements BaseLayer {
         return buf;
     }
 
-    public void setAppLayer(){
-        appLayer = (AppLayer) GetUnderLayer().GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0);
+    public void setAppLayer(AppLayer app){
+        appLayer = app;
     }
 
     @Override
@@ -171,9 +171,14 @@ public class ARPLayer implements BaseLayer {
             System.arraycopy(input, 8, senderMac, 0, 6);
             System.arraycopy(input, 14, senderIp, 0, 4);
 
-            Objects.requireNonNull(ARPCacheTable.getCache(senderIp)).setStatus(true)
-                    .setMacAddress(senderMac);
-            appLayer.addArpCacheToTable(addCache);
+            if(ARPCacheTable.getCache(senderIp) != null){
+                ARPCacheTable.getCache(senderIp).setStatus(true)
+                        .setMacAddress(senderMac);
+                appLayer.addArpCacheToTable(addCache);
+            }
+//            Objects.requireNonNull(ARPCacheTable.getCache(senderIp)).setStatus(true)
+//                    .setMacAddress(senderMac);
+//            appLayer.addArpCacheToTable(addCache);
         }
         return true;
     }
